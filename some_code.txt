@@ -1,0 +1,11 @@
+img = cv2.imread('obj_imgs/fork2.png', 0)
+img = cv2.bitwise_not(img)
+img[220:, :] = 0
+
+# fork image
+fork = np.zeros([224,224], dtype=np.uint8)
+fork[:,79:159] = img[28:-28,130:210]
+
+# spoon
+spoon = np.zeros([224,224], dtype=np.uint8)
+spoon[:,81:151] = img[28:-28,70:140]
