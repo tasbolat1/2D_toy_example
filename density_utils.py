@@ -69,8 +69,11 @@ def refine_sample(x, D, steps=10, f='KL',
         if x_t.grad is not None:
             x_t.grad.zero_()
             
-        
         d_score = D(x_t)
+        # print(x_t)
+        # print(D)
+        # print(d_score)
+        # print("=====================")
         Nq = torch.FloatTensor([Nq]).to(x_t.device)
         Np = torch.FloatTensor([Np]).to(x_t.device)
         bias_term = torch.log(Nq) - torch.log(Np)
