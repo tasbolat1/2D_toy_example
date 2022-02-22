@@ -53,11 +53,17 @@ def corr_is_pos(x, angle):
 class ToyGraspDataset(Dataset):
     def __init__(self, root, name='data', size=1000, is_pos_label=True, device='cpu', dataset="sim2sim"):
         path = os.path.join(root, f'{name}.npy')
+        self.name=name
         #if not os.path.exists(path):
-        if dataset=='sim2sim':
-            self._build_dataset(path, size)
-        elif dataset=='sim2real':
-            self._build_corrector_dataset(path, size)
+        if self.name=='train_data':
+            if dataset=='sim2sim':
+                self._build_dataset(path, size)
+            elif dataset=='sim2real':
+                self._build_corrector_dataset(path, size)
+        elif self.name=='test_data':
+            self._build_corrector_test_dataset(path, size)
+
+
         self.data = np.load(path)
         self.transform = torch.from_numpy
         self.is_pos_label = is_pos_label
@@ -91,10 +97,10 @@ class ToyGraspDataset(Dataset):
         a2 = np.random.uniform(low=np.radians(250), high=np.radians(290), size=int(size/2))
         alpha = np.hstack([a1,a2])
         np.random.shuffle(alpha)
-        
-        
+
+
         data = []
-        for i in range(size):
+        for i in range(len(alpha)):
             pos_label = 0
             handle_label = 0
             sim_label = 0
@@ -109,6 +115,40 @@ class ToyGraspDataset(Dataset):
         np.random.shuffle(dataset)
         np.save(path, dataset)    
     
+
+
+    def _build_corrector_test_dataset(self, path, size):
+        x1 = np.linspace(65, 135, int(size/2))
+        x2 = np.linspace(155, 180, int(size/2))
+        x_all = np.hstack([x1,x2])
+        a1 = np.linspace(np.radians(70), np.radians(120), int(size/2))
+        a2 = np.linspace(np.radians(250), np.radians(290), int(size/2))
+        a_all = np.hstack([a1,a2])
+        
+        xx, aa = np.meshgrid(x_all, a_all)
+
+        test_x = np.c_[xx.ravel(), aa.ravel()]
+        x = test_x[:,0]
+        alpha = test_x[:,1]
+
+
+
+        data = []
+        for i in range(len(alpha)):
+            pos_label = 0
+            handle_label = 0
+            sim_label = 0
+            if corr_is_pos(x[i], alpha[i]):
+                pos_label = 1
+            if is_handle(x[i]):
+                handle_label = 1
+                
+            data.append([x[i], alpha[i], pos_label, handle_label])
+
+        dataset = np.array(data, dtype='float32')
+        np.save(path, dataset)    
+    
+
     def __getitem__(self, i):
         x = self.transform(self.data[i]).to(self.device)
         if self.is_pos_label:
