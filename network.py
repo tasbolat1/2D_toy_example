@@ -101,7 +101,7 @@ def train_network(model, train_dataloader, train_dataset, test_dataloader, test_
                 test_loss += loss.item()
                 predicted = torch.sigmoid(outputs)
                 test_accuracy += (torch.round(predicted) == labels).sum().item()
-
+                break
         # normalize
         test_loss /= len(test_dataset)
         test_accuracy /= len(test_dataset)
