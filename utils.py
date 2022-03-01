@@ -49,3 +49,16 @@ def show_grasp(ax, x, angle, label=None):
     ax.annotate("", xy=(x-x1_coef*20, 224/2-x2_coef*20), xytext=(x1, x2),arrowprops=dict(arrowstyle=arrow_style, color=color, linewidth=2))
     
     ax.scatter(x, 224/2, s=40, color='g')
+
+def count_real_positives(refined_points):
+    # refined_points[:,0] *= 224
+    # refined_points[:,1] *= (2*3.14)
+
+    xs = np.asarray(refined_points[:,0])
+    # alphas = np.asarray(refined_points[:,1])*(180/np.pi)
+    alphas = np.asarray(refined_points[:,1])
+    x_mask = np.logical_or(np.logical_and(xs >= 80, xs <= 120), np.logical_and(xs >= 160, xs <= 170))
+    a_mask = np.logical_or(np.logical_and(alphas >= 80, alphas <= 100), np.logical_and(alphas >= 260, alphas <= 280))
+    mask = np.logical_and(x_mask, a_mask)
+
+    return np.sum(mask)

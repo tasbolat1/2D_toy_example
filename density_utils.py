@@ -179,6 +179,13 @@ def refine_sample2(x, D1, D2, steps=10, f='KL',
 
         if f == 'KL':
             s = torch.ones_like(log_r.detach())
+            
+        elif f == 'logD':
+            s = 1 / (1 + log_r.detach().exp())
+
+        elif f == 'JS':
+            s = 1 / (1 + 1 / log_r.detach().exp())
+
         else:
             raise ValueError()
 
