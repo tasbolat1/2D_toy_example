@@ -1,0 +1,7 @@
+TODO:
+1. find a way to sample data for the corrector
+2. collect real world data
+3. learn how to modify kernel functions of GP
+    how does a GP get classification labels
+    what is a kernel
+    what are the different kinds of kernels
