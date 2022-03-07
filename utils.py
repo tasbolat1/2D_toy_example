@@ -60,5 +60,4 @@ def count_real_positives(refined_points):
     x_mask = np.logical_or(np.logical_and(xs >= 80, xs <= 120), np.logical_and(xs >= 160, xs <= 170))
     a_mask = np.logical_or(np.logical_and(alphas >= 80, alphas <= 100), np.logical_and(alphas >= 260, alphas <= 280))
     mask = np.logical_and(x_mask, a_mask)
-
-    return np.sum(mask)
+    return np.sum(mask), mask
