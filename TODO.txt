@@ -5,3 +5,18 @@ TODO:
     how does a GP get classification labels
     what is a kernel
     what are the different kinds of kernels
+
+
+
+
+
+
+
+
+
+1. create two worlds
+    A: sim world
+    B: "real" world but still in simulator
+
+2. refinement using data from two worlds
+    TRAINING DATA:
