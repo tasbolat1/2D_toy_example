@@ -20,3 +20,7 @@ TODO:
 
 2. refinement using data from two worlds
     TRAINING DATA:
+        5 x 20 x N
+        get old grasps and relabel?
+        stricter parameters
+        

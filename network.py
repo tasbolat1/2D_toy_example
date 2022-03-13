@@ -17,6 +17,12 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
 
+import gpytorch
+from gpytorch.models import ExactGP
+from gpytorch.likelihoods import DirichletClassificationLikelihood
+from gpytorch.means import ConstantMean
+from gpytorch.kernels import ScaleKernel, RBFKernel
+
 #criterion = nn.BCEWithLogitsLoss() #nn.CrossEntropyLoss()
 
 
@@ -116,7 +122,93 @@ def train_network(model, train_dataloader, train_dataset, test_dataloader, test_
             print(f'Train acc: {train_accuracy} | Test acc: {test_accuracy}')
 
     return model, info
-    
+
+
+def train_network_GP(model, likelihood, train_dataset, test_dataset, n_epochs = 100, print_freq = 10, optimizer=None):
+    info = {
+        'train_loss':[],
+        # 'train_acc':[],
+        'test_loss':[],
+        # 'test_acc':[]
+    }
+
+    mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
+
+    for epoch in range(1, n_epochs+1):  # loop over the dataset multiple times
+
+        model.train()
+        likelihood.train()
+
+        train_loss = 0.0
+        # train_accuracy = 0.0
+        # for i, data in enumerate(train_dataloader, 0):
+            # get the inputs; data is a list of [inputs, labels]
+        inputs, labels = train_dataset[:,:2], train_dataset[:,2]
+        inputs[:,0] /= 244
+        inputs[:,1] /= (3.14*2)
+
+        # Zero gradients from previous iteration
+        optimizer.zero_grad()
+        # Output from model
+        output = likelihood(model(inputs))
+        # Calc loss and backprop gradients
+        loss = -mll(output, labels).sum()
+        loss.backward()
+        optimizer.step()
+
+        # get statistics
+        # train_loss += loss.item()
+        train_loss = loss.item()
+        # predicted = torch.sigmoid(outputs)
+        # train_accuracy += (torch.round(predicted) == labels).sum().item()
+
+        # normalize
+        train_loss /= len(train_dataset)
+        # train_accuracy /= len(train_dataset)
+
+        # info['train_acc'].append(train_accuracy)
+        info['train_loss'].append(train_loss)
+
+        # ================================            
+        # model.eval()
+        # likelihood.eval()
+        
+        # test_loss = 0.0
+        # # test_accuracy = 0.0
+        # with torch.no_grad():
+        #     for i, data in enumerate(test_dataloader, 0):
+        #         # get the inputs; data is a list of [inputs, labels]
+        #         inputs, labels = data
+                
+        #         inputs[:,0] /= 244
+        #         inputs[:,1] /= (3.14*2)
+
+        #         # forward + backward + optimize
+        #         outputs = model(inputs).squeeze()
+        #         loss = criterion(outputs, labels)
+
+        #         # get statistics
+        #         test_loss += loss.item()
+        #         predicted = torch.sigmoid(outputs)
+        #         test_accuracy += (torch.round(predicted) == labels).sum().item()
+
+        # # normalize
+        # test_loss /= len(test_dataset)
+        # # test_accuracy /= len(test_dataset)
+
+        # # info['test_acc'].append(test_accuracy)
+        # info['test_loss'].append(test_loss)
+        # ================================            
+        
+        if epoch % print_freq == 0:
+
+            print(f'Epoch: {epoch}')
+            print(f'Train loss: {train_loss}')
+            # print(f'Train loss: {train_loss} | Test losses: {test_loss}')
+            # print(f'Train acc: {train_accuracy} | Test acc: {test_accuracy}')
+
+    return model, info
+
     
 # train classifier
 # class ClassifierNN(torch.nn.Module):
