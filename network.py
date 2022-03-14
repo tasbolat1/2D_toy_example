@@ -157,54 +157,47 @@ def train_network_GP(model, likelihood, train_dataset, test_dataset, n_epochs = 
         optimizer.step()
 
         # get statistics
-        # train_loss += loss.item()
         train_loss = loss.item()
-        # predicted = torch.sigmoid(outputs)
-        # train_accuracy += (torch.round(predicted) == labels).sum().item()
 
         # normalize
         train_loss /= len(train_dataset)
-        # train_accuracy /= len(train_dataset)
 
-        # info['train_acc'].append(train_accuracy)
         info['train_loss'].append(train_loss)
 
         # ================================            
-        # model.eval()
-        # likelihood.eval()
+        model.eval()
+        likelihood.eval()
         
-        # test_loss = 0.0
-        # # test_accuracy = 0.0
-        # with torch.no_grad():
-        #     for i, data in enumerate(test_dataloader, 0):
-        #         # get the inputs; data is a list of [inputs, labels]
-        #         inputs, labels = data
+        test_loss = 0.0
+        with torch.no_grad():
+            # for i, data in enumerate(test_dataloader, 0):
+                # get the inputs; data is a list of [inputs, labels]
+            inputs, labels = test_dataset[:,:2], test_dataset[:,2]
                 
-        #         inputs[:,0] /= 244
-        #         inputs[:,1] /= (3.14*2)
+            inputs[:,0] /= 244
+            inputs[:,1] /= (3.14*2)
 
-        #         # forward + backward + optimize
-        #         outputs = model(inputs).squeeze()
-        #         loss = criterion(outputs, labels)
+            # Output from model
+            output = likelihood(model(inputs))
+            # Calc loss and backprop gradients
+            loss = -mll(output, labels).sum()
 
-        #         # get statistics
-        #         test_loss += loss.item()
-        #         predicted = torch.sigmoid(outputs)
-        #         test_accuracy += (torch.round(predicted) == labels).sum().item()
+            # get statistics
+            test_loss += loss.item()
 
-        # # normalize
-        # test_loss /= len(test_dataset)
-        # # test_accuracy /= len(test_dataset)
+        # normalize
+        test_loss /= len(test_dataset)
+        # test_accuracy /= len(test_dataset)
 
-        # # info['test_acc'].append(test_accuracy)
-        # info['test_loss'].append(test_loss)
+        # info['test_acc'].append(test_accuracy)
+        info['test_loss'].append(test_loss)
         # ================================            
         
         if epoch % print_freq == 0:
 
             print(f'Epoch: {epoch}')
-            print(f'Train loss: {train_loss}')
-            # print(f'Train loss: {train_loss} | Test losses: {test_loss}')
+            # print(f'Train loss: {train_loss}')
+            print(f'Train loss: {train_loss} | Test loss: {test_loss}')
             # print(f'Train acc: {train_accuracy} | Test acc: {test_accuracy}')
 
     return model, info
@@ -244,3 +237,85 @@ class ClassifierNN(torch.nn.Module):
             if i != (self.total_mlps-2):
                 x = F.relu(x)    
         return x
+
+
+from gpytorch.models import ExactGP
+from gpytorch.likelihoods import DirichletClassificationLikelihood
+from gpytorch.means import ConstantMean
+from gpytorch.kernels import ScaleKernel, RBFKernel
+
+class ExactGPModel(ExactGP):
+    def __init__(self, train_x, train_y, likelihood, kernel='RBF'):
+        super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
+        self.mean_module = gpytorch.means.ConstantMean()
+        if kernel == 'RBF':
+            self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
+        elif kernel == 'RQ':
+            self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RQKernel())
+
+    def forward(self, x):
+        mean_x = self.mean_module(x)
+        covar_x = self.covar_module(x)
+        return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+
+
+# class BatchedGPModel(ExactGP):
+#     """Class for creating batched Gaussian Process Regression models.  Ideal candidate if
+#     using GPU-based acceleration such as CUDA for training.
+#     Parameters:
+#         train_x (torch.tensor): The training features used for Gaussian Process
+#             Regression.  These features will take shape (B * YD, N, XD), where:
+#                 (i) B is the batch dimension - minibatch size
+#                 (ii) N is the number of data points per GPR - the neighbors considered
+#                 (iii) XD is the dimension of the features (d_state + d_action)
+#                 (iv) YD is the dimension of the labels (d_reward + d_state)
+#             The features of train_x are tiled YD times along the first dimension.
+#         train_y (torch.tensor): The training labels used for Gaussian Process
+#             Regression.  These features will take shape (B * YD, N), where:
+#                 (i) B is the batch dimension - minibatch size
+#                 (ii) N is the number of data points per GPR - the neighbors considered
+#                 (iii) YD is the dimension of the labels (d_reward + d_state)
+#             The features of train_y are stacked.
+#         likelihood (gpytorch.likelihoods.GaussianLikelihood): A likelihood object
+#             used for training and predicting samples with the BatchedGP model.
+#         shape (int):  The batch shape used for creating this BatchedGP model.
+#             This corresponds to the number of samples we wish to interpolate.
+#         output_device (str):  The device on which the GPR will be trained on.
+#         use_ard (bool):  Whether to use Automatic Relevance Determination (ARD)
+#             for the lengthscale parameter, i.e. a weighting for each input dimension.
+#             Defaults to False.
+#     """
+#     def __init__(self, train_x, train_y, likelihood, shape, output_device, use_ard=False):
+
+#         # Run constructor of superclass
+#         super(BatchedGPModel, self).__init__(train_x, train_y, likelihood)
+
+#         # Determine if using ARD
+#         ard_num_dims = None
+#         if use_ard:
+#             ard_num_dims = train_x.shape[-1]
+
+#         # Create the mean and covariance modules
+#         self.shape = torch.Size([shape])
+#         self.mean_module = ConstantMean(batch_shape=self.shape)
+#         self.base_kernel = RBFKernel(batch_shape=self.shape,
+#                                         ard_num_dims=ard_num_dims)
+#         self.covar_module = ScaleKernel(self.base_kernel,
+#                                         batch_shape=self.shape,
+#                                         output_device=output_device)
+
+#     def forward(self, x):
+#         """Forward pass method for making predictions through the model.  The
+#         mean and covariance are each computed to produce a MV distribution.
+#         Parameters:
+#             x (torch.tensor): The tensor for which we predict a mean and
+#                 covariance used the BatchedGP model.
+#         Returns:
+#             mv_normal (gpytorch.distributions.MultivariateNormal): A Multivariate
+#                 Normal distribution with parameters for mean and covariance computed
+#                 at x.
+#         """
+#         mean_x = self.mean_module(x)  # Compute the mean at x
+#         covar_x = self.covar_module(x)  # Compute the covariance at x
+#         return MultivariateNormal(mean_x, covar_x)
+
