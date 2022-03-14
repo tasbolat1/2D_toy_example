@@ -134,6 +134,12 @@ def train_network_GP(model, likelihood, train_dataset, test_dataset, n_epochs = 
 
     mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
 
+    # inputs, labels = train_dataset[:,:2], train_dataset[:,2]
+    # inputs[:,0] /= 244
+    # inputs[:,1] /= (3.14*2) 
+    # train_dataset[:,0]/=244
+    # train_dataset[:,1]/=(3.14*2)
+
     for epoch in range(1, n_epochs+1):  # loop over the dataset multiple times
 
         model.train()
@@ -144,8 +150,8 @@ def train_network_GP(model, likelihood, train_dataset, test_dataset, n_epochs = 
         # for i, data in enumerate(train_dataloader, 0):
             # get the inputs; data is a list of [inputs, labels]
         inputs, labels = train_dataset[:,:2], train_dataset[:,2]
-        inputs[:,0] /= 244
-        inputs[:,1] /= (3.14*2)
+        # inputs[:,0] /= 244
+        # inputs[:,1] /= (3.14*2)
 
         # Zero gradients from previous iteration
         optimizer.zero_grad()
