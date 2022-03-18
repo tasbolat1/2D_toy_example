@@ -124,7 +124,7 @@ def train_network(model, train_dataloader, train_dataset, test_dataloader, test_
     return model, info
 
 
-def train_network_GP(model, likelihood, train_dataset, test_dataset, n_epochs = 100, print_freq = 10, optimizer=None):
+def train_network_GP(model, likelihood, train_dataset, test_dataset, train_dataloader=None, n_epochs = 100, print_freq = 10, optimizer=None):
     info = {
         'train_loss':[],
         # 'train_acc':[],
@@ -263,6 +263,47 @@ class ExactGPModel(ExactGP):
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+
+
+# class ExactGPModel(gpytorch.models.ExactGP):
+#     def __init__(self, train_x, train_y, likelihood, n_devices=1, output_device=torch.device('cuda:0'), kernel='RBF'):
+#         super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
+#         self.mean_module = gpytorch.means.ConstantMean()
+#         if kernel == 'RBF':
+#             base_covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
+#         elif kernel == 'RQ':
+#             base_covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RQKernel())
+
+#         self.covar_module = gpytorch.kernels.MultiDeviceKernel(
+#             base_covar_module, device_ids=range(n_devices),
+#             output_device=output_device
+#         )
+
+#     def forward(self, x):
+#         mean_x = self.mean_module(x)
+#         covar_x = self.covar_module(x)
+#         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
+
+# class ExactGPModel(gpytorch.models.ExactGP):
+#     def __init__(self, train_x, train_y, likelihood, kernel='RBF'):
+#         super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
+#         self.mean_module = gpytorch.means.ConstantMean()
+#         if kernel == 'RBF':
+#             self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
+#         elif kernel == 'RQ':
+#             self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RQKernel())
+#         # elif kernel == 'GIK'
+#         #     self.covar_module = gpytorch.kernels.GridInterpolationKernel(
+#         #         gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel(ard_num_dims=2)),
+#         #         num_dims=2, grid_size=100
+#         #     )
+#         self.feature_extractor = GP_feature_extractor()
+
+
+#     def forward(self, x):
+#         mean_x = self.mean_module(x)
+#         covar_x = self.covar_module(x)
+#         return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
 
 
 # class BatchedGPModel(ExactGP):

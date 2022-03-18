@@ -232,7 +232,7 @@ def draw_density_ratio_GP(ax, model, likelihood,
             s = s.to(device)
             s[:,0] /= 244
             s[:,1] /= (3.14*2)
-            s = s.repeat(1,200)
+            # s = s.repeat(1,200)
             # print(f"s: {s[0]}")
             # ==================================================
             # print("stuck at model")
