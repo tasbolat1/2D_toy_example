@@ -6,13 +6,7 @@ TODO:
     what is a kernel
     what are the different kinds of kernels
 
-
-
-
-
-
-
-
+============================================
 
 1. create two worlds
     A: sim world
@@ -24,3 +18,17 @@ TODO:
         get old grasps and relabel?
         stricter parameters
         
+============================================
+
+1. check if there's a GP that you can initialize without training inputs
+    - batched exact GP
+    - approximate GP
+    - dirichlet GP
+2. complete pipeline of NN+GP
+
+3. implement NN + GP using exact GP
+    - extract feature vectors from data
+        train_x (quat, trans, pc) -> 512-D vector
+        train_y 0 or 1
+    - initialize GP with 10k feature vectors
+    - complete refinement
