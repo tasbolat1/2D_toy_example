@@ -297,9 +297,11 @@ def draw_density_ratio_GPC(ax, model, likelihood,
 
             # _pred_means = model(s)
             # pred_means = _pred_means.loc
-            pred_means = likelihood(model(s)).loc
-            
-            logit = pred_means[1,:] - pred_means[0,:]
+            # pred_means = likelihood(model(s)).loc
+            pred_means = likelihood(model(s))
+            # print(pred_means)
+            # logit = pred_means[1,:] - pred_means[0,:]
+            logit = pred_means.probs
 
             # logit = likelihood(model(s)).loc[1]
             # logit = model(s)
