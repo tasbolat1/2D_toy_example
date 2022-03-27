@@ -32,3 +32,10 @@ TODO:
         train_y 0 or 1
     - initialize GP with 10k feature vectors
     - complete refinement
+        
+============================================
+
+1. understand the mean
+2. write corrector term part
+
+
